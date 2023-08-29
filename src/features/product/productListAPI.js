@@ -7,17 +7,29 @@ export function fetchAllProducts() {
   });
 }
 
-export function fetchProductsByFilter(filter) {
-  // TODO: handle multiple filters
-  let Query = '';
+export function fetchProductsByFilters(filter, sort) {
+  // filter = {"category":["smartphone","laptops"]}
+  // sort = {_sort:"price",_order="desc"}
 
-  for (const key in filter) {
-    Query += `${key}=${filter[key]}&`;
+  // TODO : on server we will support multi values in filter
+  let queryString = '';
+  for (let key in filter) {
+    const categoryValues = filter[key];
+    if (categoryValues.length) {
+      const lastCategoryValue = categoryValues[categoryValues.length - 1];
+      queryString += `${key}=${lastCategoryValue}&`;
+    }
+  }
+  for (let key in sort) {
+    queryString += `${key}=${sort[key]}&`;
   }
 
   return new Promise(async (resolve) => {
-    // TODO: Replace with real API call
-    const response = await fetch(`http://localhost:8080/products?${Query}`);
+    //TODO: we will not hard-code server URL here
+    const response = await fetch(
+      'http://localhost:8080/products?' + queryString
+    );
+
     const data = await response.json();
     resolve({ data });
   });

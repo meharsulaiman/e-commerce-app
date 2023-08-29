@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { fetchAllProducts, fetchProductsByFilter } from './productListAPI';
+import { fetchAllProducts, fetchProductsByFilters } from './productListAPI';
 
 const initialState = {
   products: [],
@@ -16,8 +16,8 @@ export const fetchAllProductsAsync = createAsyncThunk(
 
 export const fetchProductsByFilterAsync = createAsyncThunk(
   'products/fetchProductsByFilter',
-  async (filter) => {
-    const response = await fetchProductsByFilter(filter);
+  async (filter, sort) => {
+    const response = await fetchProductsByFilters(filter, sort);
     return response.data;
   }
 );

@@ -12,7 +12,6 @@ import {
 
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  fetchAllProductsAsync,
   fetchProductsByFilterAsync,
   selectProducts,
 } from '../productListSlice';
@@ -184,23 +183,38 @@ export default function ProductList() {
   const products = useSelector(selectProducts);
   const dispatch = useDispatch();
   const [filter, setFilter] = useState({});
+  const [sort, setSort] = useState({});
 
-  useEffect(() => {
-    dispatch(fetchAllProductsAsync());
-  }, [dispatch]);
+  const handleFilter = (e, section, option) => {
+    console.log(e.target.checked);
+    const newFilter = { ...filter };
+    // TODO : on server it will support multiple categories
+    if (e.target.checked) {
+      if (newFilter[section.id]) {
+        newFilter[section.id].push(option.value);
+      } else {
+        newFilter[section.id] = [option.value];
+      }
+    } else {
+      const index = newFilter[section.id].findIndex(
+        (el) => el === option.value
+      );
+      newFilter[section.id].splice(index, 1);
+    }
+    console.log({ newFilter });
 
-  const handleFilter = (e, sectionId, optionValue) => {
-    const newFilter = { ...filter, [sectionId]: optionValue };
-    console.log(newFilter);
     setFilter(newFilter);
-    dispatch(fetchProductsByFilterAsync(newFilter));
   };
 
   const handleSort = (e, option) => {
-    const newFilter = { ...filter, _sort: option.sort, _order: option.order };
-    setFilter(newFilter);
-    dispatch(fetchProductsByFilterAsync(newFilter));
+    const sort = { _sort: option.sort, _order: option.order };
+    console.log({ sort });
+    setSort(sort);
   };
+
+  useEffect(() => {
+    dispatch(fetchProductsByFilterAsync(filter, sort));
+  }, [dispatch, filter, sort, fetchProductsByFilterAsync]);
 
   return (
     <div className='bg-white'>
@@ -517,7 +531,7 @@ function MobileFilter({
                                   type='checkbox'
                                   defaultChecked={option.checked}
                                   onChange={(e) =>
-                                    handleFilter(e, section.id, option.value)
+                                    handleFilter(e, section, option)
                                   }
                                   className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
                                 />
@@ -580,9 +594,7 @@ function DesktopFilter({ handleFilter }) {
                         type='checkbox'
                         defaultChecked={option.checked}
                         className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-                        onChange={(e) =>
-                          handleFilter(e, section.id, option.value)
-                        }
+                        onChange={(e) => handleFilter(e, section, option)}
                       />
                       <label
                         htmlFor={`filter-${section.id}-${optionIdx}`}
