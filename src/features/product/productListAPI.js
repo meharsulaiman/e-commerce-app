@@ -7,6 +7,15 @@ export function fetchAllProducts() {
   });
 }
 
+export function fecthProductById(id) {
+  return new Promise(async (resolve) => {
+    // TODO: Replace with real API call
+    const response = await fetch('http://localhost:8080/products/' + id);
+    const data = await response.json();
+    resolve({ data });
+  });
+}
+
 export function fetchProductsByFilters(filter, sort, pagination) {
   // TODO : on server we will support multi values in filter
   let queryString = '';
