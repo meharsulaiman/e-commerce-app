@@ -6,11 +6,40 @@ import SignupPage from './pages/SignupPage';
 import CartPage from './pages/CartPage';
 import Checkout from './pages/Checkout';
 import ProductDetailsPage from './pages/ProductDetailsPage';
+import ProtectedRoute from './features/auth/components/ProtectedRoute';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Home />,
+    element: (
+      <ProtectedRoute>
+        <Home />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/cart',
+    element: (
+      <ProtectedRoute>
+        <CartPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/checkout',
+    element: (
+      <ProtectedRoute>
+        <Checkout />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/product-details/:id',
+    element: (
+      <ProtectedRoute>
+        <ProductDetailsPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/login',
@@ -19,18 +48,6 @@ const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignupPage />,
-  },
-  {
-    path: '/cart',
-    element: <CartPage />,
-  },
-  {
-    path: '/checkout',
-    element: <Checkout />,
-  },
-  {
-    path: '/product-details/:id',
-    element: <ProductDetailsPage />,
   },
 ]);
 

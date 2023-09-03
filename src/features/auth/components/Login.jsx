@@ -1,9 +1,29 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
+import { checkUserAsync, selectErrors, selectLoggedInUser } from '../authSlice';
 
 export default function Login() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const dispatch = useDispatch();
+  const error = useSelector(selectErrors);
+  const user = useSelector(selectLoggedInUser);
+
+  const onSubmit = (data) => {
+    console.log(data);
+    dispatch(checkUserAsync({ email: data.email, password: data.password }));
+  };
+
+  console.log(errors);
+
   return (
     <>
+      {user && <Navigate to={'/'} replace />}
       <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
         <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
           <img
@@ -17,7 +37,7 @@ export default function Login() {
         </div>
 
         <div className='mt-10 sm:mx-auto sm:w-full sm:max-w-sm'>
-          <form className='space-y-6' action='#' method='POST'>
+          <form className='space-y-6' onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label
                 htmlFor='email'
@@ -28,12 +48,24 @@ export default function Login() {
               <div className='mt-2'>
                 <input
                   id='email'
-                  name='email'
+                  {...register(
+                    'email',
+                    {
+                      pattern: {
+                        value: /\b[\w\.-]+@[\w\.-]+\.\w{2,4}\b/gi,
+                        message: 'email is not valid',
+                      },
+                    },
+                    { required: 'Email is required' }
+                  )}
                   type='email'
-                  autoComplete='email'
-                  required
                   className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                 />
+                {errors.email && (
+                  <p className='text-sm bg-red-500 text-red-100 rounded-lg mt-1 px-2 py-1'>
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -57,12 +89,17 @@ export default function Login() {
               <div className='mt-2'>
                 <input
                   id='password'
-                  name='password'
+                  {...register('password', {
+                    required: 'Password is required',
+                  })}
                   type='password'
-                  autoComplete='current-password'
-                  required
                   className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                 />
+                {error && (
+                  <p className='text-sm bg-red-500 text-red-100 rounded-lg mt-1 px-2 py-1'>
+                    {error.message}
+                  </p>
+                )}
               </div>
             </div>
 
