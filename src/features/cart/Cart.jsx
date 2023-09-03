@@ -1,4 +1,6 @@
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { deleteCartItemAsync, selectCart, updateItemAsync } from './CartSlice';
 
 const products = [
   {
@@ -29,6 +31,20 @@ const products = [
 ];
 
 export default function Cart() {
+  const productsCart = useSelector(selectCart);
+  const dispatch = useDispatch();
+
+  const totalAmount = productsCart.reduce((amount, item) => {
+    return item.quantity * item.price + amount;
+  }, 0);
+  const totalItems = productsCart.reduce((total, item) => {
+    return item.quantity + total;
+  }, 0);
+
+  function handleQuantity(e, product) {
+    dispatch(updateItemAsync({ ...product, quantity: +e.target.value }));
+  }
+
   return (
     <main className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-white'>
       <div className='border-b border-gray-200 pb-6 pt-24'>
@@ -38,12 +54,12 @@ export default function Cart() {
         <div className='mt-8'>
           <div className='flow-root'>
             <ul role='list' className='-my-6 divide-y divide-gray-200'>
-              {products.map((product) => (
+              {productsCart.map((product) => (
                 <li key={product.id} className='flex py-6'>
                   <div className='h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200'>
                     <img
-                      src={product.imageSrc}
-                      alt={product.imageAlt}
+                      src={product.images[0]}
+                      alt={product.title}
                       className='h-full w-full object-cover object-center'
                     />
                   </div>
@@ -52,12 +68,12 @@ export default function Cart() {
                     <div>
                       <div className='flex justify-between text-base font-medium text-gray-900'>
                         <h3>
-                          <a href={product.href}>{product.name}</a>
+                          <a href={product.thumbnail}>{product.title}</a>
                         </h3>
-                        <p className='ml-4'>{product.price}</p>
+                        <p className='ml-4'>${product.price}</p>
                       </div>
                       <p className='mt-1 text-sm text-gray-500'>
-                        {product.color}
+                        {product.brand}
                       </p>
                     </div>
                     <div className='flex flex-1 items-end justify-between text-sm mb-2'>
@@ -65,7 +81,13 @@ export default function Cart() {
                         <label htmlFor='qty' className='mr-5'>
                           Qty
                         </label>
-                        <select name='' id='qty' className='py-1'>
+                        <select
+                          name=''
+                          id='qty'
+                          className='py-1'
+                          onChange={(e) => handleQuantity(e, product)}
+                          value={product.quantity}
+                        >
                           <option value='1'>1</option>
                           <option value='2'>2</option>
                           <option value='3'>3</option>
@@ -77,6 +99,9 @@ export default function Cart() {
                         <button
                           type='button'
                           className='font-medium text-indigo-600 hover:text-indigo-500'
+                          onClick={() =>
+                            dispatch(deleteCartItemAsync(product.id))
+                          }
                         >
                           Remove
                         </button>
@@ -92,7 +117,11 @@ export default function Cart() {
         <div className='border-t border-gray-200 px-4 py-6 sm:px-6'>
           <div className='flex justify-between text-base font-medium text-gray-900'>
             <p>Subtotal</p>
-            <p>$262.00</p>
+            <p>$ {totalAmount}</p>
+          </div>
+          <div className='flex justify-between text-base font-medium text-gray-900'>
+            <p>Total items in cart</p>
+            <p>{totalItems} items</p>
           </div>
           <p className='mt-0.5 text-sm text-gray-500'>
             Shipping and taxes calculated at checkout.
