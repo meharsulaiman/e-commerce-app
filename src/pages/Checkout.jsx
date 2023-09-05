@@ -1,59 +1,79 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-
-const products = [
-  {
-    id: 1,
-    name: 'Throwback Hip Bag',
-    href: '#',
-    color: 'Salmon',
-    price: '$90.00',
-    quantity: 1,
-    imageSrc:
-      'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg',
-    imageAlt:
-      'Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.',
-  },
-  {
-    id: 2,
-    name: 'Medium Stuff Satchel',
-    href: '#',
-    color: 'Blue',
-    price: '$32.00',
-    quantity: 1,
-    imageSrc:
-      'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-02.jpg',
-    imageAlt:
-      'Front of satchel with blue canvas body, black straps and handle, drawstring top, and front zipper pouch.',
-  },
-  // More products...
-];
-
-const addresses = [
-  {
-    name: 'Jane Cooper',
-    street: 'urdu bazar',
-    city: 'lahore',
-    pinCode: '110011',
-    state: 'punjab',
-    phone: 736498732569,
-  },
-  {
-    name: 'Jane cover',
-    street: 'urdu bazar',
-    city: 'lahore',
-    pinCode: '110011',
-    state: 'punjab',
-    phone: 736498732569,
-  },
-];
+import {
+  deleteCartItemAsync,
+  selectCart,
+  updateItemAsync,
+} from '../features/cart/CartSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { useForm } from 'react-hook-form';
+import {
+  selectLoggedInUser,
+  updateUserAsync,
+} from '../features/auth/authSlice';
+import { createOrderAsync } from '../features/order/orderSlice';
 
 export default function Checkout() {
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [setselectPayment, setSetselectPayment] = useState('card');
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+  const productsCart = useSelector(selectCart);
+  const user = useSelector(selectLoggedInUser);
+  const dispatch = useDispatch();
+
+  const totalAmount = productsCart.reduce((amount, item) => {
+    return item.quantity * item.price + amount;
+  }, 0);
+  const totalItems = productsCart.reduce((total, item) => {
+    return item.quantity + total;
+  }, 0);
+
+  function handleQuantity(e, product) {
+    dispatch(updateItemAsync({ ...product, quantity: +e.target.value }));
+  }
+
+  function onSubmit(data) {
+    dispatch(updateUserAsync({ ...user, address: [...user.address, data] }));
+  }
+
+  function handleAddress(e) {
+    console.log(e.target.value);
+    setSelectedAddress(user.address[e.target.value]);
+  }
+
+  function handlePayment(e) {
+    setSetselectPayment(e.target.value);
+  }
+
+  function handleOrder() {
+    const order = {
+      items: productsCart,
+      totalAmount,
+      totalItems,
+      user,
+      paymentMethod: setselectPayment,
+      address: selectedAddress,
+    };
+    dispatch(createOrderAsync(order));
+    // TODO: redirect to order success page
+    // TODO: clear CART
+    // TODO: decrease stock on server after order
+  }
+
+  console.log(errors);
   return (
     <div className='mx-auto max-w-7xl py-6 sm:px-6 lg:px-8'>
       <div className='grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-5 '>
         <div className='lg:col-span-3'>
-          <form className='bg-white py-10 px-5'>
+          <form
+            className='bg-white py-10 px-5'
+            onSubmit={handleSubmit(onSubmit)}
+          >
             <div className='space-y-12'>
               <div className='border-b border-gray-900/10 pb-12'>
                 <h2 className='text-base font-semibold leading-7 text-gray-900'>
@@ -69,34 +89,21 @@ export default function Checkout() {
                       htmlFor='first-name'
                       className='block text-sm font-medium leading-6 text-gray-900'
                     >
-                      First name
+                      Full name
                     </label>
                     <div className='mt-2'>
                       <input
                         type='text'
-                        name='first-name'
+                        {...register('name', { required: 'Name is required' })}
                         id='first-name'
                         autoComplete='given-name'
                         className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                       />
-                    </div>
-                  </div>
-
-                  <div className='sm:col-span-3'>
-                    <label
-                      htmlFor='last-name'
-                      className='block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Last name
-                    </label>
-                    <div className='mt-2'>
-                      <input
-                        type='text'
-                        name='last-name'
-                        id='last-name'
-                        autoComplete='family-name'
-                        className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-                      />
+                      {errors.name && (
+                        <p className='text-sm bg-red-500 text-red-100 rounded-lg mt-1 px-2 py-1'>
+                          {errors.name.message}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -110,32 +117,41 @@ export default function Checkout() {
                     <div className='mt-2'>
                       <input
                         id='email'
-                        name='email'
+                        {...register('email', {
+                          required: 'Email is required',
+                        })}
                         type='email'
-                        autoComplete='email'
                         className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                       />
+                      {errors.email && (
+                        <p className='text-sm bg-red-500 text-red-100 rounded-lg mt-1 px-2 py-1'>
+                          {errors.email.message}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div className='sm:col-span-3'>
                     <label
-                      htmlFor='country'
+                      htmlFor='phone'
                       className='block text-sm font-medium leading-6 text-gray-900'
                     >
-                      Country
+                      Phone
                     </label>
                     <div className='mt-2'>
-                      <select
-                        id='country'
-                        name='country'
-                        autoComplete='country-name'
-                        className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-                      >
-                        <option>United States</option>
-                        <option>Canada</option>
-                        <option>Mexico</option>
-                      </select>
+                      <input
+                        id='phone'
+                        {...register('phone', {
+                          required: 'Phone is required',
+                        })}
+                        type='tel'
+                        className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+                      />
+                      {errors.phone && (
+                        <p className='text-sm bg-red-500 text-red-100 rounded-lg mt-1 px-2 py-1'>
+                          {errors.phone.message}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -149,11 +165,18 @@ export default function Checkout() {
                     <div className='mt-2'>
                       <input
                         type='text'
-                        name='street-address'
+                        {...register('street', {
+                          required: 'Street address is required',
+                        })}
                         id='street-address'
                         autoComplete='street-address'
                         className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                       />
+                      {errors.street && (
+                        <p className='text-sm bg-red-500 text-red-100 rounded-lg mt-1 px-2 py-1'>
+                          {errors.street.message}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -167,11 +190,15 @@ export default function Checkout() {
                     <div className='mt-2'>
                       <input
                         type='text'
-                        name='city'
+                        {...register('city', { required: 'City is required' })}
                         id='city'
-                        autoComplete='address-level2'
                         className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                       />
+                      {errors.city && (
+                        <p className='text-sm bg-red-500 text-red-100 rounded-lg mt-1 px-2 py-1'>
+                          {errors.city.message}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -185,11 +212,17 @@ export default function Checkout() {
                     <div className='mt-2'>
                       <input
                         type='text'
-                        name='region'
+                        {...register('state', {
+                          required: 'State is required',
+                        })}
                         id='region'
-                        autoComplete='address-level1'
                         className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                       />
+                      {errors.state && (
+                        <p className='text-sm bg-red-500 text-red-100 rounded-lg mt-1 px-2 py-1'>
+                          {errors.state.message}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -203,17 +236,25 @@ export default function Checkout() {
                     <div className='mt-2'>
                       <input
                         type='text'
-                        name='postal-code'
+                        {...register('pinCode', {
+                          required: 'ZIP code is required',
+                        })}
                         id='postal-code'
                         autoComplete='postal-code'
                         className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
                       />
+                      {errors.pinCode && (
+                        <p className='text-sm bg-red-500 text-red-100 rounded-lg mt-1 px-2 py-1'>
+                          {errors.pinCode.message}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className='mt-6 flex items-center justify-end gap-x-6'>
                   <button
+                    onClick={() => reset()}
                     type='button'
                     className='text-sm font-semibold leading-6 text-gray-900'
                   >
@@ -236,16 +277,18 @@ export default function Checkout() {
                   Choose from existing
                 </p>
                 <ul role='list' className='divide-y divide-gray-100'>
-                  {addresses.map((address) => (
+                  {user.address.map((address, index) => (
                     <li
-                      key={address.name}
+                      key={index}
                       className='flex justify-between gap-x-6 py-5 border-b-2'
                     >
                       <div className='flex min-w-0 gap-x-4 items-center'>
                         <input
+                          onChange={handleAddress}
                           id='address'
                           name='address'
                           type='radio'
+                          value={index}
                           className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
                         />
                         <div className='min-w-0 flex-auto'>
@@ -282,6 +325,8 @@ export default function Checkout() {
                     <div className='mt-6 space-y-6'>
                       <div className='flex items-center gap-x-3'>
                         <input
+                          onChange={handlePayment}
+                          value={'cash'}
                           id='cash-payment'
                           name='payment'
                           type='radio'
@@ -296,6 +341,8 @@ export default function Checkout() {
                       </div>
                       <div className='flex items-center gap-x-3'>
                         <input
+                          onChange={handlePayment}
+                          value={'card'}
                           id='cardpayment'
                           name='payment'
                           type='radio'
@@ -316,20 +363,20 @@ export default function Checkout() {
           </form>
         </div>
         <div className='lg:col-span-2'>
-          <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-white'>
-            <div className='border-b border-gray-200 pb-6 pt-10'>
+          <main className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-white'>
+            <div className='border-b border-gray-200 pb-6 pt-24'>
               <h1 className='text-4xl font-bold tracking-tight text-gray-900'>
                 Cart
               </h1>
               <div className='mt-8'>
                 <div className='flow-root'>
                   <ul role='list' className='-my-6 divide-y divide-gray-200'>
-                    {products.map((product) => (
+                    {productsCart.map((product) => (
                       <li key={product.id} className='flex py-6'>
                         <div className='h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200'>
                           <img
-                            src={product.imageSrc}
-                            alt={product.imageAlt}
+                            src={product.images[0]}
+                            alt={product.title}
                             className='h-full w-full object-cover object-center'
                           />
                         </div>
@@ -338,12 +385,12 @@ export default function Checkout() {
                           <div>
                             <div className='flex justify-between text-base font-medium text-gray-900'>
                               <h3>
-                                <a href={product.href}>{product.name}</a>
+                                <a href={product.thumbnail}>{product.title}</a>
                               </h3>
-                              <p className='ml-4'>{product.price}</p>
+                              <p className='ml-4'>${product.price}</p>
                             </div>
                             <p className='mt-1 text-sm text-gray-500'>
-                              {product.color}
+                              {product.brand}
                             </p>
                           </div>
                           <div className='flex flex-1 items-end justify-between text-sm mb-2'>
@@ -351,7 +398,13 @@ export default function Checkout() {
                               <label htmlFor='qty' className='mr-5'>
                                 Qty
                               </label>
-                              <select name='' id='qty' className='py-1'>
+                              <select
+                                name=''
+                                id='qty'
+                                className='py-1'
+                                onChange={(e) => handleQuantity(e, product)}
+                                value={product.quantity}
+                              >
                                 <option value='1'>1</option>
                                 <option value='2'>2</option>
                                 <option value='3'>3</option>
@@ -363,6 +416,9 @@ export default function Checkout() {
                               <button
                                 type='button'
                                 className='font-medium text-indigo-600 hover:text-indigo-500'
+                                onClick={() =>
+                                  dispatch(deleteCartItemAsync(product.id))
+                                }
                               >
                                 Remove
                               </button>
@@ -378,18 +434,22 @@ export default function Checkout() {
               <div className='border-t border-gray-200 px-4 py-6 sm:px-6'>
                 <div className='flex justify-between text-base font-medium text-gray-900'>
                   <p>Subtotal</p>
-                  <p>$262.00</p>
+                  <p>$ {totalAmount}</p>
+                </div>
+                <div className='flex justify-between text-base font-medium text-gray-900'>
+                  <p>Total items in cart</p>
+                  <p>{totalItems} items</p>
                 </div>
                 <p className='mt-0.5 text-sm text-gray-500'>
                   Shipping and taxes calculated at checkout.
                 </p>
                 <div className='mt-6'>
-                  <Link
-                    to='/payment'
-                    className='flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700'
+                  <div
+                    onClick={handleOrder}
+                    className='flex items-center cursor-pointer justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700'
                   >
-                    Pay and Order
-                  </Link>
+                    Order
+                  </div>
                 </div>
                 <div className='mt-6 flex justify-center text-center text-sm text-gray-500'>
                   <p>
@@ -406,7 +466,7 @@ export default function Checkout() {
                 </div>
               </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     </div>
