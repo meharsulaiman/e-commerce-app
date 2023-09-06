@@ -14,6 +14,7 @@ export function addToCart(item) {
 
 export function updateCart(update) {
   return new Promise(async (resolve) => {
+    console.log(update);
     const response = await fetch('http://localhost:8080/cart/' + update.id, {
       method: 'PATCH',
       body: JSON.stringify(update),
@@ -45,5 +46,18 @@ export function fetchItemByUserId(userId) {
     const response = await fetch('http://localhost:8080/cart?user=' + userId);
     const data = await response.json();
     resolve({ data });
+  });
+}
+
+export function resetCart(userId) {
+  return new Promise(async (resolve) => {
+    const response = await fetchItemByUserId(userId);
+    const items = response.data;
+
+    for (const item of items) {
+      console.log(item);
+      await deleteCartItem(item.id);
+    }
+    resolve({ status: 'success' });
   });
 }

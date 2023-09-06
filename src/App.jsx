@@ -11,6 +11,9 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchItemByUserIdAsync } from './features/cart/CartSlice';
 import { selectLoggedInUser } from './features/auth/authSlice';
+import PageNotFound from './pages/PageNotFound';
+import OrderSuccess from './pages/OrderSuccess';
+import UserOrderPage from './pages/UserOrderPage';
 
 const router = createBrowserRouter([
   {
@@ -52,6 +55,18 @@ const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignupPage />,
+  },
+  {
+    path: '/order-success/:id',
+    element: <OrderSuccess />,
+  },
+  {
+    path: '/orders',
+    element: <UserOrderPage />,
+  },
+  {
+    path: '*',
+    element: <PageNotFound />,
   },
 ]);
 

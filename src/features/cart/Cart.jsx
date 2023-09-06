@@ -15,7 +15,7 @@ export default function Cart() {
 
   function handleQuantity(e, product) {
     const newItem = { ...product, quantity: +e.target.value };
-    delete newItem['id'];
+    // delete newItem['id'];
     dispatch(updateItemAsync(newItem));
   }
 
