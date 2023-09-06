@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Children, Fragment } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import {
   Bars3Icon,
@@ -23,8 +23,8 @@ const navigation = [
   { name: 'Reports', href: '#', current: false },
 ];
 const userNavigation = [
-  { name: 'Your Profile', link: '/' },
-  { name: 'orders', link: '/orders' },
+  { name: 'My Profile', link: '/profile' },
+  { name: 'My orders', link: '/orders' },
   { name: 'Sign out', link: '/login' },
 ];
 
@@ -32,7 +32,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
-export default function Navbar() {
+export default function Navbar({ children }) {
   const cart = useSelector(selectCart);
   return (
     <div className='min-h-full'>
@@ -214,10 +214,10 @@ export default function Navbar() {
         )}
       </Disclosure>
 
-      <header className='bg-white shadow'>
+      <header className='bg-white shadow mb-2'>
         <div className='mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8'>
           <h1 className='text-3xl font-bold tracking-tight text-gray-900'>
-            Shop Verse
+            {children}
           </h1>
         </div>
       </header>

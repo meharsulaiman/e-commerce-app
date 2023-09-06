@@ -5,7 +5,7 @@ import UserOrders from '../features/user/components/UserOrders';
 export default function () {
   return (
     <>
-      <Navbar />
+      <Navbar>User Orders</Navbar>
       <UserOrders />
     </>
   );

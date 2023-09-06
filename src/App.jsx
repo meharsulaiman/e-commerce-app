@@ -14,6 +14,7 @@ import { selectLoggedInUser } from './features/auth/authSlice';
 import PageNotFound from './pages/PageNotFound';
 import OrderSuccess from './pages/OrderSuccess';
 import UserOrderPage from './pages/UserOrderPage';
+import UserProfilePage from './pages/UserProfilePage';
 
 const router = createBrowserRouter([
   {
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
   {
     path: '/orders',
     element: <UserOrderPage />,
+  },
+  {
+    path: '/profile',
+    element: <UserProfilePage />,
   },
   {
     path: '*',

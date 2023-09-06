@@ -5,7 +5,7 @@ import ProductDetail from '../features/product/components/ProductDetail';
 export default function ProductDetailsPage() {
   return (
     <div>
-      <Navbar />
+      <Navbar>Products</Navbar>
       <ProductDetail />
     </div>
   );
